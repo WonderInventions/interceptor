@@ -65,7 +65,7 @@ func newDelayController(c delayControllerConfig) *delayController {
 		}
 	})
 	delayController.rateController = rateController
-	overuseDetector := newOveruseDetector(newAdaptiveThreshold(), 10*time.Millisecond, rateController.onDelayStats)
+	overuseDetector := newOveruseDetector(newAdaptiveThreshold(), 50*time.Millisecond, rateController.onDelayStats)
 	slopeEstimator := newSlopeEstimator(newKalman(), overuseDetector.onDelayStats)
 	arrivalGroupAccumulator := newArrivalGroupAccumulator()
 
