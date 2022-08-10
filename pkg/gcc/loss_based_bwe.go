@@ -53,12 +53,15 @@ func newLossBasedBWE(initialBitrate int) *lossBasedBandwidthEstimator {
 	}
 }
 
-func (e *lossBasedBandwidthEstimator) getEstimate(wantedRate int) LossStats {
+func (e *lossBasedBandwidthEstimator) getEstimate(knownGoodRate, wantedRate int) LossStats {
 	e.lock.Lock()
 	defer e.lock.Unlock()
 
 	if e.bitrate <= 0 {
 		e.bitrate = clampInt(wantedRate, e.minBitrate, e.maxBitrate)
+	}
+	if e.lastIncrease.After(e.lastDecrease) && knownGoodRate > e.bitrate {
+		e.bitrate = knownGoodRate
 	}
 	e.bitrate = minInt(wantedRate, e.bitrate)
 

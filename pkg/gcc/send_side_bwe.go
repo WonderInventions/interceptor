@@ -264,7 +264,11 @@ func (e *SendSideBWE) onDelayUpdate(delayStats DelayStats) {
 	e.lock.Lock()
 	defer e.lock.Unlock()
 
-	lossStats := e.lossController.getEstimate(delayStats.TargetBitrate)
+	knownGoodRate := 0
+	if delayStats.State == stateIncrease {
+		knownGoodRate = delayStats.TargetBitrate
+	}
+	lossStats := e.lossController.getEstimate(knownGoodRate, delayStats.TargetBitrate)
 	bitrateChanged := false
 	bitrate := minInt(delayStats.TargetBitrate, lossStats.TargetBitrate)
 	if bitrate != e.latestBitrate {
