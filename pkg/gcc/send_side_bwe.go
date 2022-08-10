@@ -218,6 +218,9 @@ func (e *SendSideBWE) GetTargetBitrate() int {
 // GetState returns +1, 0, or -1 to indicate whether the bandwidth estimator is in increase, hold,
 // or decrease state, respectively.
 func (e *SendSideBWE) GetState() int {
+	e.lock.Lock()
+	defer e.lock.Unlock()
+
 	res := 0
 	switch e.latestStats.State {
 	case stateIncrease:
