@@ -70,6 +70,9 @@ func insertSorted(list []pktInfo, element pktInfo) []pktInfo {
 
 // BuildFeedbackPacket creates a new RTCP packet containing a TWCC feedback report.
 func (r *Recorder) BuildFeedbackPacket() []rtcp.Packet {
+	if len(r.receivedPackets) == 0 {
+		return nil
+	}
 	feedback := newFeedback(r.senderSSRC, r.mediaSSRC, r.fbPktCnt)
 	r.fbPktCnt++
 	if len(r.receivedPackets) < 2 {
