@@ -17,6 +17,8 @@ type senderStream struct {
 	clockRate float64
 	m         sync.Mutex
 
+	useLatestPacket bool
+
 	// data from rtp packets
 	lastRTPTimeRTP  uint32
 	lastRTPTimeTime time.Time
@@ -36,8 +38,8 @@ func (stream *senderStream) processRTP(now time.Time, header *rtp.Header, payloa
 	stream.m.Lock()
 	defer stream.m.Unlock()
 
-	if stream.packetCount == 0 || int16(header.SequenceNumber-stream.lastRTPSN) > 0 {
-		// First packet or in-order
+	if stream.useLatestPacket || stream.packetCount == 0 || int16(header.SequenceNumber-stream.lastRTPSN) > 0 {
+		// Told to consider every packet, or this was the first packet, or it's in-order
 		stream.lastRTPSN = header.SequenceNumber
 		stream.lastRTPTimeRTP = header.Timestamp
 		stream.lastRTPTimeTime = now

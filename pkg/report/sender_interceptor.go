@@ -59,6 +59,8 @@ type SenderInterceptor struct {
 	wg        sync.WaitGroup
 	close     chan struct{}
 	started   chan struct{}
+
+	useLatestPacket bool
 }
 
 func (s *SenderInterceptor) isClosed() bool {
@@ -134,6 +136,7 @@ func (s *SenderInterceptor) loop(rtcpWriter interceptor.RTCPWriter) {
 // will be called once per rtp packet.
 func (s *SenderInterceptor) BindLocalStream(info *interceptor.StreamInfo, writer interceptor.RTPWriter) interceptor.RTPWriter {
 	stream := newSenderStream(info.SSRC, info.ClockRate)
+	stream.useLatestPacket = s.useLatestPacket
 	s.streams.Store(info.SSRC, stream)
 
 	return interceptor.RTPWriterFunc(func(header *rtp.Header, payload []byte, a interceptor.Attributes) (int, error) {
