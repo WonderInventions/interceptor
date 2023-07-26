@@ -17,6 +17,7 @@ type senderStream struct {
 	// data from rtp packets
 	lastRTPTimeRTP  uint32
 	lastRTPTimeTime time.Time
+	lastRTPSN       uint16
 	packetCount     uint32
 	octetCount      uint32
 }
@@ -32,9 +33,12 @@ func (stream *senderStream) processRTP(now time.Time, header *rtp.Header, payloa
 	stream.m.Lock()
 	defer stream.m.Unlock()
 
-	// always update time to minimize errors
-	stream.lastRTPTimeRTP = header.Timestamp
-	stream.lastRTPTimeTime = now
+	if stream.packetCount == 0 || int16(header.SequenceNumber-stream.lastRTPSN) > 0 {
+		// First packet or in-order
+		stream.lastRTPSN = header.SequenceNumber
+		stream.lastRTPTimeRTP = header.Timestamp
+		stream.lastRTPTimeTime = now
+	}
 
 	stream.packetCount++
 	stream.octetCount += uint32(len(payload))
