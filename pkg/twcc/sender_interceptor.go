@@ -60,8 +60,9 @@ type SenderInterceptor struct {
 	interval  time.Duration
 	startTime time.Time
 
-	recorder   *Recorder
-	packetChan chan packet
+	useOldRecorder bool
+	recorder       IRecorder
+	packetChan     chan packet
 }
 
 // An Option is a function that can be used to configure a SenderInterceptor
@@ -76,13 +77,24 @@ func SendInterval(interval time.Duration) Option {
 	}
 }
 
+func UseOldImplementation() Option {
+	return func(s *SenderInterceptor) error {
+		s.useOldRecorder = true
+		return nil
+	}
+}
+
 // BindRTCPWriter lets you modify any outgoing RTCP packets. It is called once per PeerConnection. The returned method
 // will be called once per packet batch.
 func (s *SenderInterceptor) BindRTCPWriter(writer interceptor.RTCPWriter) interceptor.RTCPWriter {
 	s.m.Lock()
 	defer s.m.Unlock()
 
-	s.recorder = NewRecorder(rand.Uint32()) // #nosec
+	if s.useOldRecorder {
+		s.recorder = newRecorderOld(rand.Uint32()) // #nosec
+	} else {
+		s.recorder = NewRecorder(rand.Uint32()) // #nosec
+	}
 
 	if s.isClosed() {
 		return writer

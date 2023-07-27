@@ -16,6 +16,11 @@ const (
 	maxMissingSequenceNumbers = 0x7FFE
 )
 
+type IRecorder interface {
+	Record(mediaSSRC uint32, sequenceNumber uint16, arrivalTime int64)
+	BuildFeedbackPacket() []rtcp.Packet
+}
+
 // Recorder records incoming RTP packets and their delays and creates
 // transport wide congestion control feedback reports as specified in
 // https://datatracker.ietf.org/doc/html/draft-holmer-rmcat-transport-wide-cc-extensions-01
