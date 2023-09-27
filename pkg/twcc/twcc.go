@@ -213,7 +213,12 @@ func (f *feedback) getRTCP() *rtcp.TransportLayerCC {
 
 func (f *feedback) addReceived(sequenceNumber uint16, timestampUS int64) bool {
 	deltaUS := timestampUS - f.lastTimestampUS
-	delta250US := deltaUS / 250
+	var delta250US int64
+	if deltaUS >= 0 {
+		delta250US = (deltaUS + 125) / 250
+	} else {
+		delta250US = (deltaUS - 125) / 250
+	}
 	if delta250US < math.MinInt16 || delta250US > math.MaxInt16 { // delta doesn't fit into 16 bit, need to create new packet
 		return false
 	}
@@ -242,9 +247,9 @@ func (f *feedback) addReceived(sequenceNumber uint16, timestampUS int64) bool {
 	f.lastChunk.add(recvDelta)
 	f.deltas = append(f.deltas, &rtcp.RecvDelta{
 		Type:  recvDelta,
-		Delta: deltaUS,
+		Delta: delta250US * 250,
 	})
-	f.lastTimestampUS = timestampUS
+	f.lastTimestampUS += delta250US * 250
 	f.sequenceNumberCount++
 	f.nextSequenceNumber++
 	return true
